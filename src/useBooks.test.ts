@@ -155,6 +155,17 @@ describe('useBooks Drive sync', () => {
     expect(result.current.syncStatus).toBe('signin')
   })
 
+  it('reconnects on its own after a refresh while the saved token is still valid', async () => {
+    fake.saved = { fileId: 'file1', base: {} }
+    fake.token = 'tok'
+    fake.remote = { id: 'file1', version: 2, books: [book('a'), book('c')] }
+    const { result } = setup([book('a')])
+    await settle()
+
+    expect(result.current.syncStatus).toBe('synced')
+    expect(ids(result.current.books)).toEqual(['a', 'c'])
+  })
+
   it('starts in the sign-in state when a connection was saved', () => {
     fake.saved = { fileId: 'file1', base: {} }
     const { result } = setup([book('a')])

@@ -10,7 +10,7 @@ export interface DriveState {
 
 const LABELS: Record<SyncStatus, string> = {
   off: '☁ Sync with Drive',
-  signin: '☁ Sign in',
+  signin: '☁ Sign in to sync',
   syncing: '☁ Syncing…',
   synced: '☁ Synced',
   error: '⚠ Sync failed',
@@ -29,7 +29,7 @@ export function DriveSync({ status, error, onConnect }: DriveState) {
     status === 'error'
       ? `Sync failed: ${error}. Click to retry.`
       : status === 'signin'
-        ? 'Sign in to resume syncing with Google Drive.'
+        ? 'Your Google sign-in has expired. Click to resume syncing with Drive.'
         : status === 'off'
           ? 'Keep your list in your own Drive and share it across devices.'
           : undefined

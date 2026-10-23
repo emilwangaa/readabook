@@ -25,7 +25,7 @@ const UPLOAD_DELAY_MS = 1500
 export function useBooks() {
   const [books, setBooks] = useState<Book[]>(loadBooks)
   const [savedDrive] = useState(loadDriveState)
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>(savedDrive ? 'signin' : 'off')
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(savedDrive ? (cachedToken() ? 'syncing' : 'signin') : 'off')
   const [syncError, setSyncError] = useState('')
 
   // The latest list, so async sync work never merges against a stale render.
@@ -134,6 +134,11 @@ export function useBooks() {
     setSyncError('')
     setStatus('off')
   }, [setStatus])
+
+  // After a refresh, pick the connection back up if the saved token is still valid.
+  useEffect(() => {
+    if (drive.current && cachedToken()) syncQuietly()
+  }, [syncQuietly])
 
   // Pull other devices' changes whenever the tab regains focus.
   useEffect(() => {

@@ -211,6 +211,26 @@ span.sync-chip {
   border: 1px solid var(--border);
 }
 
+/* The one state that needs the user to act, so it stands out from the muted ones. */
+.sync-signin {
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-weight: 600;
+  animation: sync-nudge 2s ease-in-out 3;
+}
+
+@keyframes sync-nudge {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-signin {
+    animation: none;
+  }
+}
+
 .sync-error {
   color: var(--danger);
   border-color: var(--danger);

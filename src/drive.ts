@@ -9,6 +9,7 @@ const API = 'https://www.googleapis.com'
 const GIS_SRC = 'https://accounts.google.com/gsi/client'
 
 export const DRIVE_STATE_KEY = 'readabook.drive.v1'
+const TOKEN_KEY = 'readabook.drive.token.v1'
 
 /** True when the build was given a Google OAuth client ID. */
 export const driveConfigured = Boolean(CLIENT_ID)
@@ -96,7 +97,33 @@ export function preloadGoogle(): Promise<Google> {
   return load
 }
 
-let token: { value: string; expiresAt: number } | null = null
+type Token = { value: string; expiresAt: number }
+
+/** Restores the token saved before a refresh; it is only used while it hasn't expired. */
+function loadToken(): Token | null {
+  try {
+    const raw = localStorage.getItem(TOKEN_KEY)
+    const saved = raw ? (JSON.parse(raw) as Partial<Token>) : null
+    return saved && typeof saved.value === 'string' && typeof saved.expiresAt === 'number'
+      ? { value: saved.value, expiresAt: saved.expiresAt }
+      : null
+  } catch {
+    return null
+  }
+}
+
+let token: Token | null = loadToken()
+
+/** Keeps the in-memory token and its saved copy in step, so a refresh can pick the connection back up. */
+function setToken(next: Token | null): void {
+  token = next
+  try {
+    if (next) localStorage.setItem(TOKEN_KEY, JSON.stringify(next))
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    // Without storage the user just signs in again after a refresh.
+  }
+}
 
 /** The current access token, or null if there is none or it is about to expire. */
 export function cachedToken(): string | null {
@@ -117,8 +144,9 @@ export async function requestToken(prompt: '' | 'select_account'): Promise<strin
       callback: (response) => {
         if (!response.access_token) return reject(new Error('Google sign-in was not completed.'))
         const seconds = Number(response.expires_in ?? 3600)
-        token = { value: response.access_token, expiresAt: Date.now() + seconds * 1000 }
-        resolve(token.value)
+        const next = { value: response.access_token, expiresAt: Date.now() + seconds * 1000 }
+        setToken(next)
+        resolve(next.value)
       },
       error_callback: () => reject(new Error('Google sign-in was cancelled or blocked.')),
     })
@@ -129,7 +157,7 @@ export async function requestToken(prompt: '' | 'select_account'): Promise<strin
 /** Forgets the token and revokes it with Google, so the next connection starts fresh. */
 export function signOut(): void {
   const old = token?.value
-  token = null
+  setToken(null)
   if (old) window.google?.accounts.oauth2.revoke(old, () => {})
 }
 
@@ -138,7 +166,7 @@ async function request(path: string, accessToken: string, init: RequestInit = {}
     ...init,
     headers: { ...init.headers, Authorization: `Bearer ${accessToken}` },
   })
-  if (res.status === 401) token = null
+  if (res.status === 401) setToken(null)
   if (!res.ok) throw new DriveError(res.status)
   return res
 }
