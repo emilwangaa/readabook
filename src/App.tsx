@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { BookForm } from './components/BookForm.tsx'
 import { BookList } from './components/BookList.tsx'
+import { DriveSync } from './components/DriveSync.tsx'
 import { Toolbar } from './components/Toolbar.tsx'
+import { driveConfigured } from './drive.ts'
 import { filterAndSort, type SortKey } from './lib/filterSort.ts'
 import { exportJson, parseBooks } from './storage.ts'
 import type { Book, BookInput } from './types.ts'
@@ -10,7 +12,17 @@ import { useBooks } from './useBooks.ts'
 type FormState = { mode: 'closed' } | { mode: 'add' } | { mode: 'edit'; book: Book }
 
 export default function App() {
-  const { books, addBook, updateBook, deleteBook, importBooks } = useBooks()
+  const {
+    books,
+    addBook,
+    updateBook,
+    deleteBook,
+    importBooks,
+    syncStatus,
+    syncError,
+    connectDrive,
+    disconnectDrive,
+  } = useBooks()
   const [form, setForm] = useState<FormState>({ mode: 'closed' })
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('finished-desc')
@@ -70,6 +82,14 @@ export default function App() {
         onImportFile={handleImport}
         exportDisabled={books.length === 0}
       />
+      {driveConfigured && (
+        <DriveSync
+          status={syncStatus}
+          error={syncError}
+          onConnect={connectDrive}
+          onDisconnect={disconnectDrive}
+        />
+      )}
       {message && (
         <p className="message" role="status">
           {message}

@@ -76,8 +76,13 @@ export function mergeBooks(existing: Book[], imported: Book[]): Book[] {
   return [...byId.values()]
 }
 
+/** The text form used for export files and for the copy kept in Google Drive. */
+export function serializeBooks(books: Book[]): string {
+  return JSON.stringify(books, null, 2)
+}
+
 export function exportJson(books: Book[]): void {
-  const blob = new Blob([JSON.stringify(books, null, 2)], { type: 'application/json' })
+  const blob = new Blob([serializeBooks(books)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
