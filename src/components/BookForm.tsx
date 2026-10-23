@@ -48,12 +48,12 @@ export function BookForm({ book, onSubmit, onCancel }: Props) {
     <form className="panel book-form" onSubmit={handleSubmit}>
       <h2>{book ? 'Edit book' : 'Add a book'}</h2>
       <label>
-        Title
-        <input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
+        Author
+        <input value={author} onChange={(e) => setAuthor(e.target.value)} autoFocus />
       </label>
       <label>
-        Author
-        <input value={author} onChange={(e) => setAuthor(e.target.value)} />
+        Title
+        <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </label>
       <label>
         Finished reading
