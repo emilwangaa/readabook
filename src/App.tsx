@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { BookForm } from './components/BookForm.tsx'
 import { BookList } from './components/BookList.tsx'
 import { DriveSync } from './components/DriveSync.tsx'
+import { MoreMenu } from './components/MoreMenu.tsx'
 import { Toolbar } from './components/Toolbar.tsx'
 import { driveConfigured } from './drive.ts'
 import { filterAndSort, type SortKey } from './lib/filterSort.ts'
@@ -27,6 +28,8 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('finished-desc')
   const [message, setMessage] = useState('')
+
+  const driveState = { status: syncStatus, error: syncError, onConnect: connectDrive }
 
   const visible = useMemo(() => filterAndSort(books, query, sortKey), [books, query, sortKey])
 
@@ -56,12 +59,21 @@ export default function App() {
   return (
     <main>
       <header>
-        <h1>📚 Books I've read</h1>
-        {form.mode === 'closed' && (
-          <button type="button" className="primary" onClick={() => setForm({ mode: 'add' })}>
-            + Add book
-          </button>
-        )}
+        <h1>📚 Read a Book</h1>
+        <div className="header-actions">
+          {driveConfigured && <DriveSync {...driveState} />}
+          <MoreMenu
+            onExport={() => exportJson(books)}
+            exportDisabled={books.length === 0}
+            onImportFile={handleImport}
+            drive={driveConfigured ? { ...driveState, onDisconnect: disconnectDrive } : undefined}
+          />
+          {form.mode === 'closed' && (
+            <button type="button" className="primary" onClick={() => setForm({ mode: 'add' })}>
+              + Add<span className="hide-narrow"> book</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {form.mode !== 'closed' && (
@@ -78,18 +90,7 @@ export default function App() {
         onQueryChange={setQuery}
         sortKey={sortKey}
         onSortChange={setSortKey}
-        onExport={() => exportJson(books)}
-        onImportFile={handleImport}
-        exportDisabled={books.length === 0}
       />
-      {driveConfigured && (
-        <DriveSync
-          status={syncStatus}
-          error={syncError}
-          onConnect={connectDrive}
-          onDisconnect={disconnectDrive}
-        />
-      )}
       {message && (
         <p className="message" role="status">
           {message}
